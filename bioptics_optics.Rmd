@@ -1,0 +1,58 @@
+---
+title: "AB323_bioptics"
+output: html_document
+date: "2026-04-29"
+---
+
+## load packages
+```{r}
+library(tidyverse)
+library(readr)
+library(readxl)
+```
+
+
+## import data
+```{r}
+setwd("C:/Users/Eva Samson/OneDrive - University of Bergen/Dokumenter/Bergen/AB-323/bioptics")
+
+reflectance_raw <- read_xlsx("bioptics_reflectance_v2.xlsx", skip = 11) |> 
+  select(!ID)
+
+methanol_raw <- read_xlsx("bioptics_absorbance_v2.xlsx", skip = 11, sheet = "methanol extracts") |> 
+  select(!ID)
+
+water_raw <- read_xlsx("bioptics_absorbance_v2.xlsx", skip = 11, sheet = "water extracts") |> 
+  select(!ID)
+
+invivo_raw <- read_xlsx("bioptics_absorbance_v2.xlsx", skip = 11, sheet = "in vivo") |> 
+  select(!ID)
+
+filters_raw <- read_xlsx("bioptics_absorbance_v2.xlsx", skip = 11, sheet = "filters") |> 
+  select(!ID)
+```
+
+
+## clean data
+```{r}
+chla_data_clean_pier <- chla_data |> 
+  filter(chl_a_ug_l_1 != "#VALUE!") |> 
+  filter(sampling_date == "24.04.2026") |> 
+  filter(filter == "GFF") |> 
+  filter(station == "Pier") |> 
+  mutate(chl_a_ug_l_1 = as.numeric(chl_a_ug_l_1)) |>
+  mutate(sample_depth_m = as.character(sample_depth_m)) |> 
+  group_by(sample_depth_m)
+```
+
+
+
+```{r}
+chla_plot_pier <- 
+  ggplot(chla_data_clean_pier, 
+         aes(x=sample_depth_m, y=chl_a_ug_l_1)) +
+  geom_point()
+
+chla_plot_pier
+```
+
