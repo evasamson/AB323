@@ -14,7 +14,7 @@ library(readxl)
 
 ## import data
 ```{r}
-setwd("C:/Users/Eva Samson/OneDrive - University of Bergen/Dokumenter/Bergen/AB-323/bioptics")
+#setwd("C:/Users/Eva Samson/OneDrive - University of Bergen/Dokumenter/Bergen/AB-323/bioptics")
 
 reflectance_raw <- read_xlsx("bioptics_reflectance_v2.xlsx", skip = 11) |> 
   select(!ID)
@@ -33,26 +33,68 @@ filters_raw <- read_xlsx("bioptics_absorbance_v2.xlsx", skip = 11, sheet = "filt
 ```
 
 
-## clean data
+## filters
 ```{r}
-chla_data_clean_pier <- chla_data |> 
-  filter(chl_a_ug_l_1 != "#VALUE!") |> 
-  filter(sampling_date == "24.04.2026") |> 
-  filter(filter == "GFF") |> 
-  filter(station == "Pier") |> 
-  mutate(chl_a_ug_l_1 = as.numeric(chl_a_ug_l_1)) |>
-  mutate(sample_depth_m = as.character(sample_depth_m)) |> 
-  group_by(sample_depth_m)
+filters_PAR <- filters_raw |> 
+  filter(400 <= wavelength, wavelength <= 700) |> 
+  #select(!Astand_filter) |> 
+  pivot_longer(cols = !wavelength, names_to = "sample", values_to = "value")
+  # |> pivot_longer(cols = starts_with("A"), names_to = "sample", values_to = "value")
+
+
 ```
 
 
-
 ```{r}
-chla_plot_pier <- 
-  ggplot(chla_data_clean_pier, 
-         aes(x=sample_depth_m, y=chl_a_ug_l_1)) +
-  geom_point()
+filters_plot <- 
+  ggplot(filters_PAR, 
+         aes(x = wavelength, y= value, colour = sample)) +
+  scale_color_viridis_d() +
+  geom_line() +
+  theme_minimal()
 
-chla_plot_pier
+filters_plot
+```
+
+
+## reflectance vs absorbance
+```{r}
+refl_brownalgae <- reflectance_raw |> 
+  select(wavelength, contains("RB"))
+abs_brownalgae <- invivo_raw |> 
+  select(wavelength, contains("AB"))
+
+refl_abs_brownalgae <- merge(refl_brownalgae, abs_brownalgae, by = "wavelength") |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  pivot_longer(cols = starts_with("RB") | starts_with("AB"), names_to = "sample", values_to = "value") |> 
+  mutate(measurement = case_when(str_detect(sample, "R") ~ "reflectance", str_detect(sample, "A") ~ "absorbance"))
+
+
+refl_abs_brownalgae_plot <- refl_abs_brownalgae |> 
+  ggplot(aes(x = wavelength, y = value, color = sample)) + 
+  geom_line() + 
+  geom_line(data = subset(refl_abs_brownalgae, measurement == "absorbance"), aes(y = value*50)) +
+  scale_color_viridis_d(option = "magma") +
+  scale_y_continuous(sec.axis = sec_axis(~ . /50)) +
+  theme_minimal()
+
+
+refl_abs_brownalgae_plot
+
+```
+
+for separating by class:
+```{r}
+mutate(class = case_when( str_detect(sample, "B") ~ "brown", str_detect(sample, "G") ~ "green", str_detect(sample, "AR|RR") ~ "red" )) 
+```
+sample modifications:
+```{r}
+#  filter(chl_a_ug_l_1 != "#VALUE!") |> 
+#  filter(sampling_date == "24.04.2026") |> 
+#  filter(filter == "GFF") |> 
+#  filter(station == "Pier") |> 
+#  mutate(chl_a_ug_l_1 = as.numeric(chl_a_ug_l_1)) |>
+#  mutate(sample_depth_m = as.character(sample_depth_m)) |> 
+#  group_by(sample_depth_m)
 ```
 
