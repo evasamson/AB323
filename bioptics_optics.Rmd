@@ -9,6 +9,7 @@ date: "2026-04-29"
 library(tidyverse)
 library(readr)
 library(readxl)
+library(here)
 ```
 
 
@@ -54,6 +55,8 @@ filters_plot <-
   theme_minimal()
 
 filters_plot
+
+#ggsave(here("filters_plot.png"), plot = filters_plot, width = 120, height = 100, units = "mm", scale = 1.2)
 ```
 
 
@@ -81,6 +84,7 @@ refl_abs_brownalgae_plot <- refl_abs_brownalgae |>
 
 refl_abs_brownalgae_plot
 
+#ggsave(here("refl_abs_brownalgae_plot.png"), plot = refl_abs_brownalgae_plot, width = 120, height = 100, units = "mm", scale = 1.2)
 ```
 
 for separating by class:
