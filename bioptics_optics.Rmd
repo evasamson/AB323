@@ -61,6 +61,8 @@ filters_plot
 
 
 ## reflectance vs absorbance
+
+### brown algae
 ```{r}
 refl_brownalgae <- reflectance_raw |> 
   select(wavelength, contains("RB"))
@@ -75,7 +77,7 @@ refl_abs_brownalgae <- merge(refl_brownalgae, abs_brownalgae, by = "wavelength")
 
 refl_abs_brownalgae_plot <- refl_abs_brownalgae |> 
   ggplot(aes(x = wavelength, y = value, color = sample)) + 
-  geom_line() + 
+  geom_line(data = subset(refl_abs_brownalgae, measurement == "reflectance")) + 
   geom_line(data = subset(refl_abs_brownalgae, measurement == "absorbance"), aes(y = value*50)) +
   scale_color_viridis_d(option = "magma") +
   scale_y_continuous(sec.axis = sec_axis(~ . /50)) +
@@ -87,17 +89,244 @@ refl_abs_brownalgae_plot
 #ggsave(here("refl_abs_brownalgae_plot.png"), plot = refl_abs_brownalgae_plot, width = 120, height = 100, units = "mm", scale = 1.2)
 ```
 
-## absorbance/reflectance
-```{r}
-abs_refl_ratio <- refl_abs_brownalgae |> 
-  filter(sample == "RB1"| sample == "AB3") |> 
-  pivot_wider(names_from = measurement, values_from = value) |> 
-  #group_by(sample)
-  mutate(ratio = )
 
+
+### green algae
+```{r}
+refl_greenalgae <- reflectance_raw |> 
+  select(wavelength, contains("RG"))
+abs_greenalgae <- invivo_raw |> 
+  select(wavelength, contains("AG"))
+
+refl_abs_greenalgae <- merge(refl_greenalgae, abs_greenalgae, by = "wavelength") |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  pivot_longer(cols = starts_with("RG") | starts_with("AG"), names_to = "sample", values_to = "value") |> 
+  mutate(measurement = case_when(str_detect(sample, "R") ~ "reflectance", str_detect(sample, "A") ~ "absorbance"))
+
+refl_abs_greenalgae_plot <- refl_abs_greenalgae |> 
+  ggplot(aes(x = wavelength, y = value, color = sample)) + 
+  geom_line(data = subset(refl_abs_greenalgae, measurement == "reflectance")) + 
+  geom_line(data = subset(refl_abs_greenalgae, measurement == "absorbance"), aes(y = value*50)) +
+  scale_color_viridis_d(option = "magma") +
+  scale_y_continuous(sec.axis = sec_axis(~ . /50)) +
+  theme_minimal()
+
+refl_abs_greenalgae_plot
 ```
 
 
+### red algae
+```{r}
+refl_redalgae <- reflectance_raw |> 
+  select(wavelength, contains("RR"))
+abs_redalgae <- invivo_raw |> 
+  select(wavelength, contains("AR"))
+
+refl_abs_redalgae <- merge(refl_redalgae, abs_redalgae, by = "wavelength") |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  pivot_longer(cols = starts_with("RR") | starts_with("AR"), names_to = "sample", values_to = "value") |> 
+  mutate(measurement = case_when(str_detect(sample, "RR") ~ "reflectance", str_detect(sample, "AR") ~ "absorbance"))
+
+refl_abs_redalgae_plot <- refl_abs_redalgae |> 
+  ggplot(aes(x = wavelength, y = value, color = sample)) + 
+  geom_line(data = subset(refl_abs_redalgae, measurement == "reflectance")) + 
+  geom_line(data = subset(refl_abs_redalgae, measurement == "absorbance"), aes(y = value*50)) +
+  scale_color_viridis_d(option = "magma") +
+  scale_y_continuous(sec.axis = sec_axis(~ . /50)) +
+  theme_minimal()
+
+refl_abs_redalgae_plot
+```
+
+## absorbance vs. absorbance
+```{r}
+#brown
+abs_brownalgae_ratios <- abs_brownalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = AB1/AB2, ratio2 = AB1/AB3, ratio3 = AB1/AB4, ratio4 = AB2/AB3, ratio5 = AB2/AB4, ratio6 = AB3/AB4) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+abs_brownalgae_ratios_plot <- abs_brownalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+abs_brownalgae_ratios_plot
+
+#green
+abs_greenalgae_ratios <- abs_greenalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = AG1/AG2, ratio2 = AG1/AG3, ratio3 = AG2/AG3) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+abs_greenalgae_ratios_plot <- abs_greenalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+abs_greenalgae_ratios_plot
+
+#red
+abs_redalgae_ratios <- abs_redalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = AR1/AR2, ratio2 = AR1/AR3, ratio3 = AR1/AR4, ratio4 = AR2/AR3, ratio5 = AR2/AR4, ratio6 = AR3/AR4) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+abs_redalgae_ratios_plot <- abs_redalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+abs_redalgae_ratios_plot
+```
+
+
+## reflectance vs. reflectance
+```{r}
+#brown
+refl_brownalgae_ratios <- refl_brownalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = RB1/RB2, ratio2 = RB1/RB3, ratio3 = RB1/RB4, ratio4 = RB2/RB3, ratio5 = RB2/RB4, ratio6 = RB3/RB4) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+refl_brownalgae_ratios_plot <- refl_brownalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+refl_brownalgae_ratios_plot
+
+#green
+refl_greenalgae_ratios <- refl_greenalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = RG1/RG2, ratio2 = RG1/RG3, ratio3 = RG2/RG3) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+refl_greenalgae_ratios_plot <- refl_greenalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+refl_greenalgae_ratios_plot
+
+#red
+refl_redalgae_ratios <- refl_redalgae |> 
+  filter(400 <= wavelength, wavelength <= 700 ) |> 
+  mutate(ratio1 = RR2/RR3, ratio2 = RR2/RR4, ratio3 = RR3/RR4) |> 
+  select(wavelength, starts_with("ratio")) |> 
+  pivot_longer(cols = starts_with("ratio"), names_to = "ratio", values_to = "value")
+refl_redalgae_ratios_plot <- refl_redalgae_ratios |> 
+  ggplot(aes(x = wavelength, y = value, color = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+refl_redalgae_ratios_plot
+```
+
+
+## absorbance/reflectance
+This displays the ratio between absorbance and reflectance. For each class of algae, a representative and well-distinguished sample was chosen for calculating the ratio between absorbance and reflectance.
+
+### brown algae
+```{r}
+abs_refl_ratio_brown <- refl_abs_brownalgae |> 
+  filter(sample == "RB1"| sample == "AB3") |> 
+  pivot_wider(names_from = measurement, values_from = value) |> 
+  select(!sample) |> 
+  group_by(wavelength) |> 
+  summarise(
+    reflectance = na.omit(reflectance)[1],  # first non-NA in Value1
+    absorbance = na.omit(absorbance)[1]   # first non-NA in Value2
+  ) |> 
+  mutate(ratio = absorbance/reflectance) |> 
+  mutate(difference = absorbance*10 - reflectance)
+  
+
+abs_refl_ratio_brown_plot <- abs_refl_ratio_brown |> 
+  ggplot(aes(x = wavelength, y = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+
+
+abs_refl_ratio_brown_plot
+```
+
+### green algae
+```{r}
+abs_refl_ratio_green <- refl_abs_greenalgae |> 
+  filter(sample == "RG2"| sample == "AG2") |> 
+  pivot_wider(names_from = measurement, values_from = value) |> 
+  select(!sample) |> 
+  group_by(wavelength) |> 
+  summarise(
+    reflectance = na.omit(reflectance)[1],  # first non-NA in Value1
+    absorbance = na.omit(absorbance)[1]   # first non-NA in Value2
+  ) |> 
+  mutate(ratio = absorbance/reflectance) |> 
+  mutate(difference = absorbance - reflectance)
+  
+
+abs_refl_ratio_green_plot <- abs_refl_ratio |> 
+  ggplot(aes(x = wavelength, y = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+
+
+abs_refl_ratio_green_plot
+```
+
+
+### red algae
+```{r}
+abs_refl_ratio_red <- refl_abs_redalgae |> 
+  filter(sample == "RR4"| sample == "AR1") |> 
+  pivot_wider(names_from = measurement, values_from = value) |> 
+  select(!sample) |> 
+  group_by(wavelength) |> 
+  summarise(
+    reflectance = na.omit(reflectance)[1],  # first non-NA in Value1
+    absorbance = na.omit(absorbance)[1]   # first non-NA in Value2
+  ) |> 
+  mutate(ratio = absorbance/reflectance) |> 
+  mutate(difference = absorbance - reflectance)
+  
+
+abs_refl_ratio_red_plot <- abs_refl_ratio |> 
+  ggplot(aes(x = wavelength, y = ratio)) + 
+  geom_line() + 
+  theme_minimal()
+
+
+abs_refl_ratio_red_plot
+```
+
+
+## absorbance - reflectance
+### brown algae
+```{r}
+abs_refl_diff_brown_plot <- abs_refl_ratio_brown |> 
+  ggplot(aes(x = wavelength, y = difference)) + 
+  geom_line() + 
+  theme_minimal()
+
+abs_refl_diff_brown_plot
+```
+
+### green algae
+```{r}
+abs_refl_diff_green_plot <- abs_refl_ratio_green |> 
+  ggplot(aes(x = wavelength, y = difference)) + 
+  geom_line() + 
+  theme_minimal()
+
+abs_refl_diff_green_plot
+```
+
+### red algae
+```{r}
+abs_refl_diff_red_plot <- abs_refl_ratio_red |> 
+  ggplot(aes(x = wavelength, y = difference)) + 
+  geom_line() + 
+  theme_minimal()
+
+abs_refl_diff_red_plot
+```
+
+# crap
 for separating by class:
 ```{r}
 mutate(class = case_when( str_detect(sample, "B") ~ "brown", str_detect(sample, "G") ~ "green", str_detect(sample, "AR|RR") ~ "red" )) 
