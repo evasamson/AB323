@@ -87,6 +87,17 @@ refl_abs_brownalgae_plot
 #ggsave(here("refl_abs_brownalgae_plot.png"), plot = refl_abs_brownalgae_plot, width = 120, height = 100, units = "mm", scale = 1.2)
 ```
 
+## absorbance/reflectance
+```{r}
+abs_refl_ratio <- refl_abs_brownalgae |> 
+  filter(sample == "RB1"| sample == "AB3") |> 
+  pivot_wider(names_from = measurement, values_from = value) |> 
+  #group_by(sample)
+  mutate(ratio = )
+
+```
+
+
 for separating by class:
 ```{r}
 mutate(class = case_when( str_detect(sample, "B") ~ "brown", str_detect(sample, "G") ~ "green", str_detect(sample, "AR|RR") ~ "red" )) 
